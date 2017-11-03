@@ -196,27 +196,27 @@ macd_diff=0
 
 #SIMULATION
 for i in range(0,len(clean_data)-1):
-    
+  t=clean_time[i]
   #Dollar cost averaging algorithm
   if time_counter == buy_period:
-      coin_price=clean_data[i]
-      coin_amount=buy_amount/coin_price
-      dca_funds=dca_funds-buy_amount
-      dca_amt.append(dca_amt[-1]+coin_amount)
-      dca_asset_value.append(dca_amt[-1]*coin_price)
-      time_counter=0
+    coin_price=clean_data[t]
+    coin_amount=buy_amount/coin_price
+    dca_funds=dca_funds-buy_amount
+    dca_amt.append(dca_amt[-1]+coin_amount)
+    dca_asset_value.append(dca_amt[-1]*coin_price)
+    time_counter=0
   
   time_counter=time_counter+1
   
   
   #MACD trading algorithm
-  t=clean_time[i]
+
   
   if t in macd and t in signal:
     macd_diff=(macd[t]-signal[t])/macd[t]
     
   if abs(macd_diff) >= macd_trigger_threshold :
-    coin_price=clean_data[i]
+    coin_price=clean_data[t]
     if macd_diff < 0 : #if MACD minus Signal < 0
       if macd_cross == 1 : #and if MACD was previously positive
         #The the MACD has made a negative cross. Sell.
@@ -242,19 +242,24 @@ for i in range(0,len(clean_data)-1):
           bought_coin_amount=macd_amt[-1]
           bought_coin_value=bought_coin_amount*coin_price
           macd_funds=macd_funds-bought_coin_value
-          macd_amt.append(macd_amt[-1]+bought_coint_amount)        
+          macd_amt.append(macd_amt[-1]+bought_coin_amount)        
       macd_cross=1
     macd_net_worth.append(macd_amt[-1]*coin_price+macd_funds)     
       
       
       
-print(macd_funds)
-print(dca_funds)
-plt.plot(dca_asset_value)
-plt.plot(macd_net_worth)
-plt.ylabel('Value USD')
-plt.xlabel('Index')
-plt.show()
+print('Final MACD funds:',macd_funds)
+print('Final DCA funds:',dca_funds)
+print('Final MACD coin quantity:',macd_amt[-1])
+print('Final DCA coin quantity:',dca_amt[-1])
+print('Final MACD networth: ',macd_funds+macd_amt[-1]*coin_price)
+print('Final DCA networth: ',dca_funds+dca_amt[-1]*coin_price)
+
+#plt.plot(dca_asset_value)
+#plt.plot(macd_net_worth)
+#plt.ylabel('Value USD')
+#plt.xlabel('Index')
+#plt.show()
       
         
 
