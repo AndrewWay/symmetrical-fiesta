@@ -220,6 +220,7 @@ for i in range(0,len(clean_data)-1):
     if macd_diff < 0 : #if MACD minus Signal < 0
       if macd_cross == 1 : #and if MACD was previously positive
         #The the MACD has made a negative cross. Sell.
+        print('SELL @',coin_price,'T:',i)
         if macd_amt[-1] >= buy_amount : #check if you have enough
           sold_coin_amount=buy_amount/coin_price #Calculate coin quantity to sell
           macd_amt.append(macd_amt[-1]-sold_coin_amount) #Remove the coin quantity from holdings
@@ -234,6 +235,7 @@ for i in range(0,len(clean_data)-1):
     if macd_diff > 0 :
       if macd_cross == -1 :
         #Positive cross. buy
+        print('BUY @',coin_price,'T:',i)
         if macd_funds >= buy_amount : #check if you have enough
           macd_funds=macd_funds-buy_amount
           bought_coin_amount=buy_amount/coin_price
@@ -247,7 +249,6 @@ for i in range(0,len(clean_data)-1):
     macd_net_worth.append(macd_amt[-1]*coin_price+macd_funds)     
       
       
-      
 print('Final MACD funds:',macd_funds)
 print('Final DCA funds:',dca_funds)
 print('Final MACD coin quantity:',macd_amt[-1])
@@ -255,11 +256,45 @@ print('Final DCA coin quantity:',dca_amt[-1])
 print('Final MACD networth: ',macd_funds+macd_amt[-1]*coin_price)
 print('Final DCA networth: ',dca_funds+dca_amt[-1]*coin_price)
 
-#plt.plot(dca_asset_value)
-#plt.plot(macd_net_worth)
-#plt.ylabel('Value USD')
-#plt.xlabel('Index')
-#plt.show()
+#TEMPORARY STUFF FOR PLOTTING/TESTING
+#find better way
+
+ema_short_tmp=[]
+ema_long_tmp=[]
+macd_tmp=[]
+signal_tmp=[]
+price_tmp=[]
+
+for i in range(0,len(clean_time)):
+  t=clean_time[i]
+  if t in macd: 
+    if t in signal:
+      if t in ema_short:
+        if t in ema_long:
+          if t in clean_data:
+            ema_s=ema_short[t]
+            ema_l=ema_long[t]
+            mac=macd[t]
+            sig=signal[t]
+            p=clean_data[t]
+            
+            ema_short_tmp.append(ema_s)
+            ema_long_tmp.append(ema_l)
+            macd_tmp.append(mac)
+            signal_tmp.append(sig)
+            price_tmp.append(p)
+            
+# END OF TEMPORARY STUFF
+
+#plt.plot(ema_short_tmp,label='ema_short')
+#plt.plot(ema_long_tmp,label='ema_long')
+plt.plot(macd_tmp,label='MACD')
+plt.plot(signal_tmp,label='Signal')
+plt.plot(price_tmp,label='Price')
+plt.legend(loc='upper left')
+plt.ylabel('Value USD')
+plt.xlabel('Index')
+plt.show()
       
         
 
