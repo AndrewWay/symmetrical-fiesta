@@ -193,6 +193,10 @@ macd_cross=0
 
 macd_net_worth=[macd_funds]
 macd_diff=0
+macd_counter=0
+
+macd_buy_factor=0.02
+
 
 #SIMULATION
 for i in range(0,len(clean_data)-1):
@@ -213,18 +217,22 @@ for i in range(0,len(clean_data)-1):
 
   
   if t in macd and t in signal:
-    macd_diff=(macd[t]-signal[t])/macd[t]
-    
-  if abs(macd_diff) >= macd_trigger_threshold :
+    macd_diff=(macd[t]-signal[t])/abs(macd[t])
+  
+  if i == 533:
+    print('i IS NOW 533')
+    print(macd_diff)
+  if abs(macd_diff) >= macd_trigger_threshold:
     coin_price=clean_data[t]
     if macd_diff < 0 : #if MACD minus Signal < 0
       if macd_cross == 1 : #and if MACD was previously positive
         #The the MACD has made a negative cross. Sell.
-        print('SELL @',coin_price,'T:',i)
-        if macd_amt[-1] >= buy_amount : #check if you have enough
-          sold_coin_amount=buy_amount/coin_price #Calculate coin quantity to sell
-          macd_amt.append(macd_amt[-1]-sold_coin_amount) #Remove the coin quantity from holdings
-          macd_funds=macd_funds+buy_amount #Increase fiat by buy amount
+        macd_sell_amount=macd_amt[-1]*macd_buy_factor
+        print('SELL ',macd_sell_amount,'@',coin_price,'T:',i)
+        if macd_amt[-1] >= macd_sell_amount : #check if you have enough
+          sold_coin_value=macd_sell_amount*coin_price #Calculate coin quantity to sell
+          macd_amt.append(macd_amt[-1]-macd_sell_amount) #Remove the coin quantity from holdings
+          macd_funds=macd_funds+macd_sell_amount #Increase fiat by buy amount
         else :
           sold_coin_amount=macd_amt[-1]
           sold_coin_value=sold_coin_amount*coin_price
@@ -235,10 +243,11 @@ for i in range(0,len(clean_data)-1):
     if macd_diff > 0 :
       if macd_cross == -1 :
         #Positive cross. buy
-        print('BUY @',coin_price,'T:',i)
-        if macd_funds >= buy_amount : #check if you have enough
-          macd_funds=macd_funds-buy_amount
-          bought_coin_amount=buy_amount/coin_price
+        macd_buy_price=macd_funds*macd_buy_factor
+        if macd_funds >= macd_buy_price : #check if you have enough
+          macd_funds=macd_funds-macd_buy_price
+          bought_coin_amount=macd_buy_price/coin_price
+          print('BUY',bought_coin_amount,'@',coin_price,'T:',i)
           macd_amt.append(macd_amt[-1]+bought_coin_amount)
         else :
           bought_coin_amount=macd_amt[-1]
@@ -246,8 +255,8 @@ for i in range(0,len(clean_data)-1):
           macd_funds=macd_funds-bought_coin_value
           macd_amt.append(macd_amt[-1]+bought_coin_amount)        
       macd_cross=1
-    macd_net_worth.append(macd_amt[-1]*coin_price+macd_funds)     
-      
+    macd_net_worth.append(macd_amt[-1]*coin_price+macd_funds)  
+       
       
 print('Final MACD funds:',macd_funds)
 print('Final DCA funds:',dca_funds)
@@ -264,7 +273,8 @@ ema_long_tmp=[]
 macd_tmp=[]
 signal_tmp=[]
 price_tmp=[]
-
+zeros=[]
+indices=[]
 for i in range(0,len(clean_time)):
   t=clean_time[i]
   if t in macd: 
@@ -283,18 +293,21 @@ for i in range(0,len(clean_time)):
             macd_tmp.append(mac)
             signal_tmp.append(sig)
             price_tmp.append(p)
+            zeros.append(0)
+            indices.append(i)
             
 # END OF TEMPORARY STUFF
 
 #plt.plot(ema_short_tmp,label='ema_short')
 #plt.plot(ema_long_tmp,label='ema_long')
-plt.plot(macd_tmp,label='MACD')
-plt.plot(signal_tmp,label='Signal')
-plt.plot(price_tmp,label='Price')
+plt.plot(indices,macd_tmp,label='MACD')
+plt.plot(indices,signal_tmp,label='Signal')
+plt.plot(indices,price_tmp,label='Price')
+plt.plot(indices,zeros)
 plt.legend(loc='upper left')
 plt.ylabel('Value USD')
 plt.xlabel('Index')
-plt.show()
+#plt.show()
       
         
 
