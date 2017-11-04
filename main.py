@@ -10,6 +10,7 @@ import plotly.graph_objs as go
 import plotly.figure_factory as ff
 import matplotlib.pyplot as plt
 
+
 py.init_notebook_mode(connected=True)
 
 # Pickle used to serialize and save downloaded data as a file
@@ -135,9 +136,9 @@ def EMA(period,time,dat,t0):
         ema[time[ema_index]]=new_ema
     return ema
 
-short_period=10
-long_period=26
-signal_period=9
+short_period=3
+long_period=5
+signal_period=13
 initial_time=long_period
 macd={}
 zero_line={}
@@ -177,12 +178,12 @@ if len(clean_data) >= long_period :
 print('beginning trading simulator')
 buy_period=10 #parameter for DCA algorithm; make a buy every 10 time units
 time_counter=1
-dca_amt=[0]
-macd_amt=[0]
+dca_amt={}
+macd_amt={}
 
 days=len(clean_data)
 
-macd_trigger_threshold=0.05 #Determines threshold to buy or sell
+macd_trigger_threshold=0.052 #Determines threshold to buy or sell
 
 starting_funds=10000
 macd_funds=starting_funds
@@ -197,17 +198,23 @@ macd_counter=0
 
 macd_buy_factor=0.02
 
+dca_currentAmt=0
+macd_currentAmt=0
+t=clean_time[0]
+dca_amt[t]=dca_currentAmt
+macd_amt[t]=macd_currentAmt
 
 #SIMULATION
-for i in range(0,len(clean_data)-1):
+for i in range(1,len(clean_data)-1):
   t=clean_time[i]
   #Dollar cost averaging algorithm
   if time_counter == buy_period:
     coin_price=clean_data[t]
     coin_amount=buy_amount/coin_price
     dca_funds=dca_funds-buy_amount
-    dca_amt.append(dca_amt[-1]+coin_amount)
-    dca_asset_value.append(dca_amt[-1]*coin_price)
+    dca_currentAmt=dca_currentAmt+coin_amount
+    dca_amt[t]=dca_currentAmt
+    dca_asset_value.append(dca_currentAmt*coin_price)
     time_counter=0
   
   time_counter=time_counter+1
@@ -219,41 +226,25 @@ for i in range(0,len(clean_data)-1):
   if t in macd and t in signal:
     macd_diff=(macd[t]-signal[t])/abs(macd[t])
   
-  if i == 533:
-    print('i IS NOW 533')
-    print(macd_diff)
   if abs(macd_diff) >= macd_trigger_threshold:
     coin_price=clean_data[t]
     if macd_diff < 0 : #if MACD minus Signal < 0
       if macd_cross == 1 : #and if MACD was previously positive
         #The the MACD has made a negative cross. Sell.
-        macd_sell_amount=macd_amt[-1]*macd_buy_factor
+        macd_sell_amount=macd_currentAmt*macd_buy_factor
         print('SELL ',macd_sell_amount,'@',coin_price,'T:',i)
-        if macd_amt[-1] >= macd_sell_amount : #check if you have enough
+        if macd_currentAmt >= macd_sell_amount : #check if you have enough
           sold_coin_value=macd_sell_amount*coin_price #Calculate coin quantity to sell
-          macd_amt.append(macd_amt[-1]-macd_sell_amount) #Remove the coin quantity from holdings
+          macd_currentAmt=macd_currentAmt-macd_sell_amount
+          macd_amt[t]=macd_currentAmt #Remove the coin quantity from holdings
           macd_funds=macd_funds+macd_sell_amount #Increase fiat by buy amount
         else :
-          sold_coin_amount=macd_amt[-1]
+          sold_coin_amount=macd_currentAmt
           sold_coin_value=sold_coin_amount*coin_price
           macd_funds=macd_funds+sold_coin_value
-          macd_amt.append(macd_amt[-1]-sold_coin_amount)   
-        macd_cross=-1#Store the fact that MACD minus signal < 0
-      else if macd_cross == -1:
-        #MACD and signal still diverging. Sell more
-        #TODO: make some kind of function for buying or selling
-        #TODO: Make some kind of object called account. Do objects exist in python??
-        #SELL BLOCK-----------------------------------------------------------------------------
-        if macd_amt[-1] >= macd_sell_amount : #check if you have enough
-          sold_coin_value=macd_sell_amount*coin_price #Calculate coin quantity to sell
-          macd_amt.append(macd_amt[-1]-macd_sell_amount) #Remove the coin quantity from holdings
-          macd_funds=macd_funds+macd_sell_amount #Increase fiat by buy amount
-        else :
-          sold_coin_amount=macd_amt[-1]
-          sold_coin_value=sold_coin_amount*coin_price
-          macd_funds=macd_funds+sold_coin_value
-          macd_amt.append(macd_amt[-1]-sold_coin_amount)   
-        #PUT THIS IN FUNCTION--------------------------------------------------------------------
+          macd_currentAmt=macd_currentAmt-sold_coin_amount
+          macd_amt[t]=macd_currentAmt
+      macd_cross=-1#Store the fact that MACD minus signal < 0
     if macd_diff > 0 :
       if macd_cross == -1 :
         #Positive cross. buy
@@ -261,67 +252,47 @@ for i in range(0,len(clean_data)-1):
         if macd_funds >= macd_buy_price : #check if you have enough
           macd_funds=macd_funds-macd_buy_price
           bought_coin_amount=macd_buy_price/coin_price
+          macd_currentAmt=macd_currentAmt+bought_coin_amount
           print('BUY',bought_coin_amount,'@',coin_price,'T:',i)
-          macd_amt.append(macd_amt[-1]+bought_coin_amount)
+          macd_amt[t]=macd_currentAmt
         else :
-          bought_coin_amount=macd_amt[-1]
-          bought_coin_value=bought_coin_amount*coin_price
+          bought_coin_amount=macd_funds/coin_price
+          bought_coin_value=macd_funds
           macd_funds=macd_funds-bought_coin_value
-          macd_amt.append(macd_amt[-1]+bought_coin_amount)        
+          macd_amt[t]=(macd_currentAmt+bought_coin_amount)        
       macd_cross=1
-    macd_net_worth.append(macd_amt[-1]*coin_price+macd_funds)  
+    macd_net_worth.append(macd_currentAmt*coin_price+macd_funds)  
        
       
 print('Final MACD funds:',macd_funds)
 print('Final DCA funds:',dca_funds)
-print('Final MACD coin quantity:',macd_amt[-1])
-print('Final DCA coin quantity:',dca_amt[-1])
-print('Final MACD networth: ',macd_funds+macd_amt[-1]*coin_price)
-print('Final DCA networth: ',dca_funds+dca_amt[-1]*coin_price)
+print('Final MACD coin quantity:',macd_currentAmt)
+print('Final DCA coin quantity:',dca_currentAmt)
+print('Final MACD networth: ',macd_funds+macd_currentAmt*coin_price)
+print('Final DCA networth: ',dca_funds+dca_currentAmt*coin_price)
 
-#TEMPORARY STUFF FOR PLOTTING/TESTING
-#find better way
 
-ema_short_tmp=[]
-ema_long_tmp=[]
-macd_tmp=[]
-signal_tmp=[]
-price_tmp=[]
-zeros=[]
-indices=[]
-for i in range(0,len(clean_time)):
-  t=clean_time[i]
-  if t in macd: 
-    if t in signal:
-      if t in ema_short:
-        if t in ema_long:
-          if t in clean_data:
-            ema_s=ema_short[t]
-            ema_l=ema_long[t]
-            mac=macd[t]
-            sig=signal[t]
-            p=clean_data[t]
-            
-            ema_short_tmp.append(ema_s)
-            ema_long_tmp.append(ema_l)
-            macd_tmp.append(mac)
-            signal_tmp.append(sig)
-            price_tmp.append(p)
-            zeros.append(0)
-            indices.append(i)
-            
+def plot_dict(keys,values,label):
+  indices=[]
+  indexed_values=[]
+  for i in range(0,len(keys)):
+    key=keys[i]
+    if key in values:
+      indices.append(i)
+      indexed_values.append(values[key])
+  plt.plot(indices,indexed_values,label=label)
+      
 # END OF TEMPORARY STUFF
-
-#plt.plot(ema_short_tmp,label='ema_short')
-#plt.plot(ema_long_tmp,label='ema_long')
-plt.plot(indices,macd_tmp,label='MACD')
-plt.plot(indices,signal_tmp,label='Signal')
-plt.plot(indices,price_tmp,label='Price')
-plt.plot(indices,zeros)
+#plt.plot(indices,mamt,label='MACD Amount')
+#plt.plot(indices,damt,label='DCA Amount')
+plot_dict(clean_time,macd_amt,'MACD Quantity')
+#plt.plot(indices,signal_tmp,label='Signal')
+#plt.plot(indices,price_tmp,label='Price')
+#plt.plot(indices,zeros)
 plt.legend(loc='upper left')
 plt.ylabel('Value USD')
 plt.xlabel('Index')
-#plt.show()
+plt.show()
       
         
 
