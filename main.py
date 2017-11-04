@@ -136,9 +136,9 @@ def EMA(period,time,dat,t0):
         ema[time[ema_index]]=new_ema
     return ema
 
-short_period=3
-long_period=5
-signal_period=13
+short_period=12
+long_period=26
+signal_period=9
 initial_time=long_period
 macd={}
 zero_line={}
@@ -283,12 +283,12 @@ def plot_dict(keys,values,label):
   plt.plot(indices,indexed_values,label=label)
       
 # END OF TEMPORARY STUFF
-#plt.plot(indices,mamt,label='MACD Amount')
-#plt.plot(indices,damt,label='DCA Amount')
-plot_dict(clean_time,macd_amt,'MACD Quantity')
-#plt.plot(indices,signal_tmp,label='Signal')
-#plt.plot(indices,price_tmp,label='Price')
-#plt.plot(indices,zeros)
+plot_dict(clean_time,dca_amt,'DCA Coin Quantity')
+plot_dict(clean_time,macd_amt,'MACD Coin Quantity')
+plot_dict(clean_time,clean_data,'Coin Price')
+plot_dict(clean_time,macd,'MACD Line')
+plot_dict(clean_time,signal,'Signal Line')
+
 plt.legend(loc='upper left')
 plt.ylabel('Value USD')
 plt.xlabel('Index')
