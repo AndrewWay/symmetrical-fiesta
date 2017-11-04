@@ -238,8 +238,22 @@ for i in range(0,len(clean_data)-1):
           sold_coin_value=sold_coin_amount*coin_price
           macd_funds=macd_funds+sold_coin_value
           macd_amt.append(macd_amt[-1]-sold_coin_amount)   
-      
-      macd_cross=-1#Store the fact that MACD minus signal < 0
+        macd_cross=-1#Store the fact that MACD minus signal < 0
+      else if macd_cross == -1:
+        #MACD and signal still diverging. Sell more
+        #TODO: make some kind of function for buying or selling
+        #TODO: Make some kind of object called account. Do objects exist in python??
+        #SELL BLOCK-----------------------------------------------------------------------------
+        if macd_amt[-1] >= macd_sell_amount : #check if you have enough
+          sold_coin_value=macd_sell_amount*coin_price #Calculate coin quantity to sell
+          macd_amt.append(macd_amt[-1]-macd_sell_amount) #Remove the coin quantity from holdings
+          macd_funds=macd_funds+macd_sell_amount #Increase fiat by buy amount
+        else :
+          sold_coin_amount=macd_amt[-1]
+          sold_coin_value=sold_coin_amount*coin_price
+          macd_funds=macd_funds+sold_coin_value
+          macd_amt.append(macd_amt[-1]-sold_coin_amount)   
+        #PUT THIS IN FUNCTION--------------------------------------------------------------------
     if macd_diff > 0 :
       if macd_cross == -1 :
         #Positive cross. buy
