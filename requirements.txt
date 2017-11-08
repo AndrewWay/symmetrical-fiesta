@@ -1,0 +1,5 @@
+numpy<=1.13.3
+pandas<=0.21.0
+quandl<=3.2.0
+plotly<=2.2.1
+matplotlib<=2.1.0
