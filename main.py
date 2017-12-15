@@ -262,7 +262,9 @@ for i in range(1,len(clean_data)-1):
           macd_amt[t]=(macd_currentAmt+bought_coin_amount)        
       macd_cross=1
     macd_net_worth.append(macd_currentAmt*coin_price+macd_funds)  
-       
+  
+  #Bollinger Bands
+  
       
 print('Final MACD funds:',macd_funds)
 print('Final DCA funds:',dca_funds)
