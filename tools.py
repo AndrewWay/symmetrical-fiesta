@@ -12,8 +12,10 @@ def SMA(prices,period):
     for i in range(start,end):
       total = total + prices[i]
   else:
-    print('ERROR: Number of elements less than period')
-  
+    print('SMA error: Number of elements less than period',period)
+    print('Creating SMA using given ',end,' elements')
+    for i in range(0,end):
+      total = total + prices[i]
   return total/period
     
 #Exponential Moving Average Function
@@ -24,10 +26,4 @@ def EMA(close, oldEMA, period):
     newEMA=(close-oldEMA)*multiplier+oldEMA
     
     return newEMA
-
-p = [1,2,3,4,5,6,7,8,9,10]
-sma = SMA(p,9)
-ema = EMA(9.5,sma,9)
-print(sma)
-print(ema)
   
