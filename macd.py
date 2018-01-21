@@ -5,9 +5,9 @@ from tools import EMA,SMA
 #Ex: period2=26 and period1=12
 class MACDindicator:
  
-  def __init__(self, periodSmall,periodBig,periodSignal,closes):
-    self.EMA_p1 = periodSmall
-    self.EMA_p2 = periodBig
+  def __init__(self, periodShort,periodLong,periodSignal,closes):
+    self.EMA_shortp = periodShort
+    self.EMA_longp = periodLong
     self.MACD_p = periodSignal
     self.prime(closes)
     
@@ -19,28 +19,31 @@ class MACDindicator:
   #Primer for EMA, MACD, signal
   #Basically just seeds long EMA, short EMA, signal, MACD
   def prime(self,closes):
-    sliceObj = slice(0, len(closes)-self.MACD_p) 
-    primerData = closes[sliceObj]
-    self.EMA1 = SMA(primerData,self.EMA_p1)
-    self.EMA2 = SMA(primerData,self.EMA_p2)
-    tmpHolder = []
+    sliceObj = slice(0, len(closes)-self.MACD_p+1) 
+    EMAprimerData = closes[sliceObj]
+
+    self.EMAshort = SMA(EMAprimerData,self.EMA_shortp)
+    self.EMAlong = SMA(EMAprimerData,self.EMA_longp)
+    self.MACDHolder = []
+    self.MACD = self.EMAshort - self.EMAlong
+    self.MACDHolder.append(self.MACD)
     
-    for i in range(len(closes)-self.MACD_p,len(closes)):
-      self.MACD = self.EMA1 - self.EMA2
-      tmpHolder.append(self.MACD)
-      self.EMA1 = EMA(closes[i],self.EMA1,self.EMA_p1)
-      self.EMA2 = EMA(closes[i],self.EMA2,self.EMA_p2)
+    for i in range(len(closes)-self.MACD_p+1,len(closes)):
+      self.EMAshort = EMA(closes[i],self.EMAshort,self.EMA_shortp)
+      self.EMAlong = EMA(closes[i],self.EMAlong,self.EMA_longp)
+      self.MACD = self.EMAshort - self.EMAlong
+      self.MACDHolder.append(self.MACD)
     
-    self.signal = SMA(tmpHolder,self.MACD_p)
-  
+    self.signal = SMA(self.MACDHolder,self.MACD_p)
+
   def addClose(self,close):
-    self.EMA1 = EMA(close,self.EMA1,self.EMA_p1)
-    self.EMA2 = EMA(close,self.EMA2,self.EMA_p2)
-    self.MACD = self.EMA2 - self.EMA1
+    self.EMAshort = EMA(close,self.EMAshort,self.EMA_shortp)
+    self.EMAlong = EMA(close,self.EMAlong,self.EMA_longp)
+    self.MACD = self.EMAshort - self.EMAlong
     self.signal = EMA(self.MACD,self.signal,self.MACD_p)
     
-    self.updateAnalysisCriteria(close)
-    self.updateOpinion()
+    #self.updateAnalysisCriteria(close)
+    #self.updateOpinion()
     
   def updateAnalysisCriteria(self,close):
     self.divergence = (self.MACD - close)/self.MACD
@@ -50,21 +53,7 @@ class MACDindicator:
       self.crossunder = True
     
     
-  def updateOpinion():
-    
-    
-  def getEMA1(self):
-    return self.EMA1
-    
-  def getEMA2(self):
-    return self.EMA2
-    
-  def getMACD(self):
-    return self.MACD
-    
-  def getSignal(self):
-    return self.signal
-  
+  #def updateOpinion():
     
     
         

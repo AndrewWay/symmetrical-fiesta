@@ -1,21 +1,26 @@
 from tools import EMA,SMA
 from macd import MACDindicator
+import numpy as np
+import csv
+
 closes = []
+dates = []
+with open('macd.csv') as csvfile:
+    readCSV = csv.reader(csvfile, delimiter=',')
+    for row in readCSV:
+        closes.append(row[1])
+        dates.append(row[0])
+closes = np.array(closes)
+closes = closes.astype(np.float)
 
-for i in range(0,30):
-  closes.append(i)
- 
-print(closes) 
-
-macd1 = MACDindicator(12,26,9,closes)
-
-
-print(macd1.getEMA1(),macd1.getEMA2(),macd1.getMACD(),macd1.getSignal())
-
-macd1.addClose(1)
-
-
-print(macd1.getEMA1(),macd1.getEMA2(),macd1.getMACD(),macd1.getSignal())
+primerCloses = closes[slice(0,34)]
+primerDates = dates[slice(0,34)]
 
 
+macd = MACDindicator(12,26,9,primerCloses)
 
+for i in range(34, len(closes)):
+  currentClose = closes[i]
+  macd.addClose(currentClose)
+  print(currentClose,macd.EMAshort,macd.EMAlong,macd.MACD,macd.signal)
+  
