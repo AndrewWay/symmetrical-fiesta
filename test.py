@@ -1,5 +1,6 @@
 from tools import EMA,SMA
 from macd import MACDindicator
+import time
 import numpy as np
 import csv
 
@@ -21,6 +22,9 @@ macd = MACDindicator(12,26,9,primerCloses)
 
 for i in range(34, len(closes)):
   currentClose = closes[i]
+  print(dates[i], currentClose)
   macd.addClose(currentClose)
-  print(currentClose,macd.EMAshort,macd.EMAlong,macd.MACD,macd.signal)
+
+  #macd.updateOpinion()
+  time.sleep(5)
   
